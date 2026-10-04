@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DAFFOOD</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+    <main class="login-layout">
+        <section class="login-showcase" aria-label="DAFFOOD">
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&amp;fit=crop&amp;w=1400&amp;q=85" alt="Hidangan segar siap disajikan">
+            <div class="login-showcase-overlay"></div>
+            <a class="login-brand" href="index.html"><span class="login-brand-mark">D</span>DAFFOOD</a>
+            <div class="login-showcase-copy">
+                <p class="login-kicker">RUANG KERJA RESTORAN</p>
+                <h1>Setiap detail<br>lebih terkendali.</h1>
+                <p>Kelola menu dan pesanan dengan alur kerja yang terasa lebih sederhana.</p>
+            </div>
+            <span class="login-showcase-note">MANAJEMEN RESTORAN TERPADU</span>
+        </section>
+        <section class="login-content">
+            <div class="login-form-wrap">
+                <a class="login-back" href="index.html"><span aria-hidden="true">←</span> Kembali ke beranda</a>
+                <p class="login-eyebrow">SELAMAT DATANG KEMBALI</p>
+                <h2>Masuk ke akun</h2>
+                <p class="login-intro">Gunakan akun administrator untuk melanjutkan ke workspace DAFFOOD.</p>
+                <form class="login-form" action="dashboard.html">
+                    <label for="login-email">Alamat email</label>
+                    <input id="login-email" name="email" type="email" class="login-input" placeholder="nama@email.com" autocomplete="username" required>
+                    <label for="login-password">Kata sandi</label>
+                    <div class="password-field">
+                        <input id="login-password" name="password" type="password" class="login-input" placeholder="Masukkan kata sandi" autocomplete="current-password" required>
+                        <button class="password-toggle" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false">Tampilkan</button>
+                    </div>
+                    <button class="login-submit" type="submit">Masuk ke dashboard <span aria-hidden="true">→</span></button>
+                </form>
+                <p class="login-register">Belum memiliki akun? <a href="register.html">Daftar sekarang</a></p>
+                <p class="login-footnote"><span aria-hidden="true">●</span> Workspace DAFFOOD terlindungi</p>
+            </div>
+        </section>
+    </main>
+    <script>
+        const passwordInput = document.getElementById('login-password');
+        const passwordToggle = document.querySelector('.password-toggle');
+        passwordToggle.addEventListener('click', () => {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            passwordToggle.textContent = isVisible ? 'Tampilkan' : 'Sembunyikan';
+            passwordToggle.setAttribute('aria-label', isVisible ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi');
+            passwordToggle.setAttribute('aria-pressed', String(!isVisible));
+        });
+    </script>
+</body>
+</html>
