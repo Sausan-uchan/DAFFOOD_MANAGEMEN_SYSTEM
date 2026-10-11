@@ -25,7 +25,7 @@
                 <p class="login-eyebrow">BUAT WORKSPACE ANDA</p>
                 <h2>Daftar akun</h2>
                 <p class="login-intro">Isi detail berikut untuk menyiapkan akun administrator DAFFOOD.</p>
-                <form class="login-form" action="login.html">
+                <form class="login-form" id="register-form" action="login.html">
                     <label for="register-name">Nama lengkap</label>
                     <input id="register-name" name="name" type="text" class="login-input" placeholder="Nama Anda" autocomplete="name" required>
                     <label for="register-email">Alamat email</label>
@@ -40,5 +40,28 @@
             </div>
         </section>
     </main>
+    <!-- PENANDA TOAST/SNACKBAR: pesan hasil pengiriman form registrasi. -->
+    <div class="toast" id="register-toast" role="status" aria-live="polite"></div>
+    <script>
+        const registerForm = document.getElementById('register-form');
+        const registerToast = document.getElementById('register-toast');
+        let registerToastTimer;
+
+        // PENANDA TOAST/SNACKBAR: tampilkan status pendaftaran demo tanpa framework.
+        function showRegisterToast(message) {
+            registerToast.textContent = message;
+            registerToast.classList.add('visible');
+            clearTimeout(registerToastTimer);
+            registerToastTimer = setTimeout(() => registerToast.classList.remove('visible'), 2600);
+        }
+
+        registerForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            showRegisterToast('Form registrasi valid. Mengalihkan ke login dalam mode demo...');
+            setTimeout(() => {
+                window.location.href = `${registerForm.action}?toast=register`;
+            }, 900);
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toast / Snackbar | DAFFOOD</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="home-page">
+    <header class="home-header">
+        <a class="home-brand" href="index.html" aria-label="DAFFOOD beranda"><span class="home-brand-mark">D</span>DAFFOOD</a>
+        <nav class="home-nav" aria-label="Navigasi utama"><a class="home-login" href="index.html">Semua demo</a><a class="home-register" href="dashboard.html">Dashboard <span aria-hidden="true">↗</span></a></nav>
+    </header>
+    <main class="demo-main">
+        <a class="demo-back" href="index.html#fitur">← Kembali ke daftar demo</a>
+        <span class="feature-label toast-label">FITUR TOAST / SNACKBAR</span>
+        <h1>Notifikasi sementara</h1>
+        <p class="demo-description">Tekan tombol untuk menampilkan pesan singkat di bagian bawah layar. Pesan akan hilang otomatis.</p>
+        <section class="demo-panel" aria-label="Demo Toast dan Snackbar">
+            <button class="demo-button" id="toast-trigger" type="button">Tampilkan Toast</button>
+            <p class="demo-hint">Toast/Snackbar muncul sementara sebagai konfirmasi tindakan.</p>
+        </section>
+    </main>
+    <!-- PENANDA TOAST/SNACKBAR: pesan notifikasi sementara ditampilkan di elemen ini. -->
+    <div class="demo-toast" id="demo-toast" role="status" aria-live="polite"></div>
+    <script>
+        // PENANDA TOAST/SNACKBAR: tampilkan lalu sembunyikan notifikasi dengan JavaScript.
+        const toastTrigger = document.getElementById('toast-trigger');
+        const toastMessage = document.getElementById('demo-toast');
+        let toastTimer;
+
+        toastTrigger.addEventListener('click', () => {
+            toastMessage.textContent = 'Berhasil! Notifikasi Toast/Snackbar ditampilkan.';
+            toastMessage.classList.add('is-visible');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toastMessage.classList.remove('is-visible'), 2600);
+        });
+    </script>
+</body>
+</html>

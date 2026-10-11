@@ -31,12 +31,27 @@
         <main class="main-content">
             <header class="topbar">
                 <div class="breadcrumb">Workspace <span>/</span> <span id="current-view-label">Ringkasan</span></div>
-                <div class="topbar-date"><span class="status-dot"></span> Operasional aktif</div>
+                <div class="dashboard-tools">
+                    <!-- DOM 4: jam dan tanggal diperbarui otomatis selama dashboard terbuka. -->
+                    <div class="topbar-date"><span class="status-dot"></span><span id="live-date"></span><time id="live-clock"></time></div>
+                    <!-- DOM 2: tombol ini mengubah dashboard antara mode terang dan gelap. -->
+                    <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">🌙 Gelap</button>
+                    <!-- DOM 3: pilihan ini mengganti warna dasar dashboard. -->
+                    <label class="theme-picker">Warna
+                        <select id="color-theme" aria-label="Pilih warna tema">
+                            <option value="blue">Biru</option>
+                            <option value="green">Hijau</option>
+                            <option value="cream">Cream</option>
+                            <option value="slate">Abu-abu tua</option>
+                            <option value="purple">Ungu</option>
+                        </select>
+                    </label>
+                </div>
             </header>
 
             <section class="dashboard-view is-active" id="overview" aria-label="Ringkasan">
                 <div class="page-intro">
-                    <div><p class="eyebrow">PUSAT KENDALI DAFFOOD</p><h1>Selamat datang, Admin</h1><p class="intro-copy">Ringkasan operasional restoran Anda hari ini.</p></div>
+                    <div><p class="eyebrow">PUSAT KENDALI DAFFOOD</p><!-- DOM 1: sapaan menyesuaikan waktu lokal saat pengguna membuka dashboard. --><h1 id="greeting-title">Selamat datang, Admin</h1><p class="intro-copy">Ringkasan operasional restoran Anda hari ini.</p></div>
                     <a class="primary-button" href="#menu"><span aria-hidden="true">＋</span> Kelola menu</a>
                 </div>
                 <section class="stats-grid" aria-label="Ringkasan operasional">
@@ -152,6 +167,50 @@
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => toast.classList.remove('visible'), 2600);
         };
+        // DOM 1: ubah sapaan sesuai waktu lokal pengguna.
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            const greeting = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
+            document.getElementById('greeting-title').textContent = `${greeting}, Admin`;
+        }
+
+        // DOM 2 dan DOM 3: simpan preferensi tampilan dan terapkan ke halaman.
+        const colorTheme = document.getElementById('color-theme');
+        const themeToggle = document.getElementById('theme-toggle');
+        const availableColorThemes = ['blue', 'green', 'cream', 'slate', 'purple'];
+        const savedMode = localStorage.getItem('daffood-theme-mode');
+        const savedColorTheme = localStorage.getItem('daffood-color-theme');
+        function applyAppearance(mode, color) {
+            document.body.dataset.mode = mode;
+            document.body.dataset.colorTheme = color;
+            themeToggle.textContent = mode === 'dark' ? '☀ Terang' : '🌙 Gelap';
+            themeToggle.setAttribute('aria-pressed', String(mode === 'dark'));
+            colorTheme.value = color;
+        }
+        let currentMode = savedMode === 'dark' ? 'dark' : 'light';
+        let currentColorTheme = availableColorThemes.includes(savedColorTheme) ? savedColorTheme : 'blue';
+        applyAppearance(currentMode, currentColorTheme);
+        themeToggle.addEventListener('click', () => {
+            currentMode = currentMode === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('daffood-theme-mode', currentMode);
+            applyAppearance(currentMode, currentColorTheme);
+        });
+        colorTheme.addEventListener('change', () => {
+            currentColorTheme = colorTheme.value;
+            document.body.dataset.colorTheme = currentColorTheme;
+            localStorage.setItem('daffood-color-theme', currentColorTheme);
+        });
+
+        // DOM 4: tampilkan tanggal dan jam lokal secara langsung.
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-date').textContent = now.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+            document.getElementById('live-clock').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        updateGreeting();
+        updateClock();
+        setInterval(updateGreeting, 60_000);
+        setInterval(updateClock, 1_000);
         const actionButtons = (type, id) => `<div class="row-actions"><button class="icon-button edit-button" type="button" data-edit="${type}" data-id="${escapeHtml(id)}" aria-label="Edit">✎</button><button class="icon-button delete-button" type="button" data-delete="${type}" data-id="${escapeHtml(id)}" aria-label="Hapus">×</button></div>`;
         const compactRupiah = (value) => value >= 1000000 ? `${(value / 1000000).toFixed(1)} jt` : value >= 1000 ? `${Math.round(value / 1000)} rb` : String(value);
 
