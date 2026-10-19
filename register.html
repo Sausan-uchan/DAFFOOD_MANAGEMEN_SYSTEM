@@ -42,6 +42,7 @@
     </main>
     <!-- PENANDA TOAST/SNACKBAR: pesan hasil pengiriman form registrasi. -->
     <div class="toast" id="register-toast" role="status" aria-live="polite"></div>
+    <script src="js/common.js"></script>
     <script>
         const registerForm = document.getElementById('register-form');
         const registerToast = document.getElementById('register-toast');
@@ -55,12 +56,27 @@
             registerToastTimer = setTimeout(() => registerToast.classList.remove('visible'), 2600);
         }
 
-        registerForm.addEventListener('submit', (event) => {
+        registerForm.addEventListener('submit', async (event) => {
+            // TUGAS BAB 4 - Event submit memproses pendaftaran secara asynchronous.
             event.preventDefault();
-            showRegisterToast('Form registrasi valid. Mengalihkan ke login dalam mode demo...');
-            setTimeout(() => {
-                window.location.href = `${registerForm.action}?toast=register`;
-            }, 900);
+            const submitButton = registerForm.querySelector('[type="submit"]');
+            submitButton.disabled = true;
+            try {
+                await DAFFOOD.wait();
+                const values = new FormData(registerForm);
+                // TUGAS BAB 4 - Simpan profil non-rahasia saja; kata sandi tidak disimpan tanpa backend autentikasi.
+                localStorage.setItem('daffood-user', JSON.stringify({
+                    name: values.get('name').trim(),
+                    email: values.get('email').trim()
+                }));
+                showRegisterToast('Pendaftaran berhasil. Mengalihkan ke login...');
+                setTimeout(() => {
+                    window.location.href = `${registerForm.action}?toast=register`;
+                }, 900);
+            } catch (error) {
+                showRegisterToast('Data akun gagal disimpan. Periksa izin penyimpanan browser.');
+                submitButton.disabled = false;
+            }
         });
     </script>
 </body>

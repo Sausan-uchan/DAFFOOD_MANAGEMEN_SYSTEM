@@ -61,6 +61,7 @@
         <!-- PENANDA TOAST/SNACKBAR: pesan hasil pengiriman form login. -->
         <div class="toast" id="login-toast" role="status"
             aria-live="polite"></div>
+        <script src="js/common.js"></script>
         <script>
         const passwordInput = document.getElementById('login-password');
         const passwordToggle = document.querySelector('.password-toggle');
@@ -78,15 +79,28 @@
 
         const registrationNotice = new URLSearchParams(window.location.search).get('toast');
         if (registrationNotice === 'register') {
-            showLoginToast('Form registrasi demo valid. Silakan masuk; data belum disimpan ke server.');
+            showLoginToast('Profil demo tersimpan di browser. Silakan masuk.');
         }
 
-        loginForm.addEventListener('submit', (event) => {
+        loginForm.addEventListener('submit', async (event) => {
+            // TUGAS BAB 4 - Event submit memakai async/Promise dan menyimpan sesi demo tanpa menyimpan kata sandi.
             event.preventDefault();
-            showLoginToast('Selamat Login Berhasil.');
-            setTimeout(() => {
-                window.location.href = `${loginForm.action}?toast=login`;
-            }, 2000);
+            const submitButton = loginForm.querySelector('[type="submit"]');
+            submitButton.disabled = true;
+            try {
+                await DAFFOOD.wait();
+                const email = document.getElementById('login-email').value.trim();
+                const registeredUser = JSON.parse(localStorage.getItem('daffood-user') || 'null');
+                const name = registeredUser?.email === email ? registeredUser.name : 'Administrator';
+                localStorage.setItem('daffood-session', JSON.stringify({ email, name, signedInAt: new Date().toISOString() }));
+                showLoginToast('Selamat, login berhasil. Mengalihkan ke dashboard...');
+                setTimeout(() => {
+                    window.location.href = `${loginForm.action}?toast=login`;
+                }, 1200);
+            } catch (error) {
+                showLoginToast('Sesi gagal disimpan. Periksa izin penyimpanan browser.');
+                submitButton.disabled = false;
+            }
         });
 
         passwordToggle.addEventListener('click', () => {

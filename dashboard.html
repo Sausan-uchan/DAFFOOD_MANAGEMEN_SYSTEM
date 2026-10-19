@@ -23,8 +23,8 @@
                 <a class="nav-link" href="#inventory"><span class="nav-icon">◉</span>Pemantauan Stok</a>
             </nav>
             <div class="sidebar-bottom">
-                <div class="profile-chip"><span class="profile-avatar">A</span><span><strong>Administrator</strong><small>Admin DAFFOOD</small></span></div>
-                <a class="logout-link" href="login.html">Keluar <span aria-hidden="true">↗</span></a>
+                <div class="profile-chip"><span class="profile-avatar" id="profile-avatar">A</span><span><strong id="profile-name">Administrator</strong><small>Admin DAFFOOD</small></span></div>
+                <a class="logout-link" href="login.html" data-confirm="Apakah Anda yakin ingin keluar dari DAFFOOD?" data-clear-session="true">Keluar <span aria-hidden="true">↗</span></a>
             </div>
         </aside>
 
@@ -97,6 +97,8 @@
                     <div class="insight-heading"><div><p class="eyebrow">PERFORMA BISNIS</p><h2>Penjualan 7 Hari</h2><p>Nilai pesanan harian dalam satu minggu terakhir.</p></div><span class="insight-icon sales-icon">↗</span></div>
                     <div class="sales-summary"><strong id="weekly-revenue">Rp0</strong><span><b id="weekly-orders">0</b> pesanan minggu ini</span></div>
                     <div class="sales-chart" id="sales-chart" role="img" aria-label="Grafik nilai pesanan tujuh hari terakhir"></div>
+                    <button class="outline-button" id="report-note-button" type="button">Tambah catatan laporan</button>
+                    <p class="intro-copy" id="report-note" aria-live="polite"></p>
                 </article>
             </section>
 
@@ -121,6 +123,7 @@
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script src="js/common.js"></script>
     <script>
         const initialMenu = [
             { id: 'm1', name: 'Nasi Ayam Bakar', category: 'Makanan utama', price: 28000, stock: 18 },
@@ -151,6 +154,7 @@
         let editingId = null;
         let toastTimer;
         const lowStockThreshold = 5;
+        let reportNote = '';
 
         const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
         const rupiah = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
@@ -167,11 +171,29 @@
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => toast.classList.remove('visible'), 2600);
         };
+        // TUGAS BAB 4 - Web Storage mempertahankan catatan operasional laporan di perangkat pengguna.
+        try {
+            reportNote = localStorage.getItem('daffood-report-note') || '';
+        } catch (error) {
+            showToast('Catatan laporan tidak dapat dibaca dari penyimpanan browser.', 'error');
+        }
         // DOM 1: ubah sapaan sesuai waktu lokal pengguna.
         function updateGreeting() {
             const hour = new Date().getHours();
             const greeting = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
-            document.getElementById('greeting-title').textContent = `${greeting}, Admin`;
+            const name = document.getElementById('profile-name').textContent;
+            document.getElementById('greeting-title').textContent = `${greeting}, ${name}`;
+        }
+
+        // DOM 5: isi identitas profil dari Web Storage tanpa menyimpan kata sandi.
+        try {
+            const session = JSON.parse(localStorage.getItem('daffood-session') || 'null');
+            if (session?.name) {
+                document.getElementById('profile-name').textContent = session.name;
+                document.getElementById('profile-avatar').textContent = session.name.trim().charAt(0).toLocaleUpperCase('id');
+            }
+        } catch (error) {
+            showToast('Profil tidak dapat dibaca dari penyimpanan browser.', 'error');
         }
 
         // DOM 2 dan DOM 3: simpan preferensi tampilan dan terapkan ke halaman.
@@ -192,13 +214,21 @@
         applyAppearance(currentMode, currentColorTheme);
         themeToggle.addEventListener('click', () => {
             currentMode = currentMode === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('daffood-theme-mode', currentMode);
             applyAppearance(currentMode, currentColorTheme);
+            try {
+                localStorage.setItem('daffood-theme-mode', currentMode);
+            } catch (error) {
+                showToast('Preferensi tema tidak dapat disimpan.', 'error');
+            }
         });
         colorTheme.addEventListener('change', () => {
             currentColorTheme = colorTheme.value;
             document.body.dataset.colorTheme = currentColorTheme;
-            localStorage.setItem('daffood-color-theme', currentColorTheme);
+            try {
+                localStorage.setItem('daffood-color-theme', currentColorTheme);
+            } catch (error) {
+                showToast('Preferensi warna tidak dapat disimpan.', 'error');
+            }
         });
 
         // DOM 4: tampilkan tanggal dan jam lokal secara langsung.
@@ -329,6 +359,7 @@
             document.getElementById('stat-pending').textContent = transactions.filter((item) => item.status === 'Menunggu').length;
             document.getElementById('stat-revenue').textContent = rupiah(transactions.reduce((sum, item) => sum + (menuById(item.menuId)?.price || 0) * item.quantity, 0));
             renderInsights();
+            document.getElementById('report-note').textContent = reportNote ? `Catatan: ${reportNote}` : '';
         }
 
         function openDialog(type, id = null) {
@@ -354,17 +385,40 @@
         document.getElementById('transaction-search').addEventListener('input', renderDashboard);
         document.getElementById('transaction-status-filter').addEventListener('change', renderDashboard);
         document.getElementById('export-transactions').addEventListener('click', exportTransactions);
+        // TUGAS BAB 4 - Popup Box prompt meminta catatan; alert memberi umpan balik bila kosong atau gagal disimpan.
+        document.getElementById('report-note-button').addEventListener('click', () => {
+            const note = window.prompt('Masukkan catatan untuk laporan penjualan DAFFOOD:', reportNote);
+            if (note === null) return;
+            if (!note.trim()) {
+                window.alert('Catatan laporan tidak boleh kosong.');
+                return;
+            }
+            try {
+                reportNote = note.trim();
+                localStorage.setItem('daffood-report-note', reportNote);
+                document.getElementById('report-note').textContent = `Catatan: ${reportNote}`;
+                showToast('Catatan laporan berhasil disimpan.');
+            } catch (error) {
+                window.alert('Catatan laporan gagal disimpan ke browser.');
+            }
+        });
         document.querySelectorAll('a[href^="#"]').forEach((link) => link.addEventListener('click', (event) => {
             const viewId = link.getAttribute('href').slice(1);
             if (!document.getElementById(viewId)?.classList.contains('dashboard-view')) return;
             event.preventDefault();
             navigateToView(viewId);
         }));
-        window.addEventListener('popstate', () => activateDashboardView(window.location.hash.slice(1) || 'overview'));
+        // TUGAS BAB 4 - Event hashchange memperbarui tampilan saat navigasi dan tombol kembali/maju digunakan.
         window.addEventListener('hashchange', () => activateDashboardView(window.location.hash.slice(1) || 'overview'));
         activateDashboardView(window.location.hash.slice(1) || 'overview');
-        document.getElementById('data-form').addEventListener('submit', (event) => {
+        document.getElementById('data-form').addEventListener('submit', async (event) => {
+            // TUGAS BAB 4 - Event submit menggunakan Promise sebelum data menu/pesanan disimpan.
             event.preventDefault();
+            const submitButton = event.currentTarget.querySelector('[type="submit"]');
+            submitButton.disabled = true;
+            await DAFFOOD.wait(200);
+            const previousMenuItems = JSON.parse(JSON.stringify(menuItems));
+            const previousTransactions = JSON.parse(JSON.stringify(transactions));
             const values = Object.fromEntries(new FormData(event.currentTarget));
             if (activeType === 'menu') {
                 const record = { id: editingId || `menu-${Date.now()}`, name: values.name.trim(), category: values.category.trim(), price: Number(values.price), stock: Number(values.stock) };
@@ -378,6 +432,7 @@
                 const quantity = Number(values.quantity);
                 if (!selectedMenu || quantity > Number(selectedMenu.stock) + returnedQuantity) {
                     showToast('Stok menu tidak cukup untuk jumlah pesanan.', 'error');
+                    submitButton.disabled = false;
                     return;
                 }
                 if (existing?.stockDeducted && existingMenu) existingMenu.stock += existing.quantity;
@@ -386,19 +441,33 @@
                 if (editingId) transactions = transactions.map((item) => item.id === editingId ? record : item);
                 else transactions.unshift(record);
             }
-            persist();
+            try {
+                persist();
+            } catch (error) {
+                menuItems = previousMenuItems;
+                transactions = previousTransactions;
+                renderDashboard();
+                showToast('Data gagal disimpan ke penyimpanan browser.', 'error');
+                submitButton.disabled = false;
+                return;
+            }
             renderDashboard();
             document.getElementById('data-dialog').close();
+            submitButton.disabled = false;
             showToast(`${activeType === 'menu' ? 'Menu' : 'Pesanan'} berhasil ${editingId ? 'diperbarui' : 'ditambahkan'}.`);
         });
         document.addEventListener('click', (event) => {
-            const editButton = event.target.closest('[data-edit]');
-            const deleteButton = event.target.closest('[data-delete]');
+            const target = event.target instanceof Element ? event.target : null;
+            if (!target) return;
+            const editButton = target.closest('[data-edit]');
+            const deleteButton = target.closest('[data-delete]');
             if (editButton) openDialog(editButton.dataset.edit, editButton.dataset.id);
-            if (deleteButton) {
+            else if (deleteButton) {
                 const { delete: type, id } = deleteButton.dataset;
                 const label = type === 'menu' ? menuById(id)?.name : `pesanan #${id}`;
-                if (!confirm(`Hapus ${label}?`)) return;
+                if (!window.confirm(`Apakah Anda yakin ingin menghapus ${label}?`)) return;
+                const previousMenuItems = JSON.parse(JSON.stringify(menuItems));
+                const previousTransactions = JSON.parse(JSON.stringify(transactions));
                 if (type === 'menu') menuItems = menuItems.filter((item) => item.id !== id);
                 else {
                     const transaction = transactions.find((item) => item.id === id);
@@ -406,7 +475,15 @@
                     if (menu) menu.stock += transaction.quantity;
                     transactions = transactions.filter((item) => item.id !== id);
                 }
-                persist();
+                try {
+                    persist();
+                } catch (error) {
+                    menuItems = previousMenuItems;
+                    transactions = previousTransactions;
+                    renderDashboard();
+                    showToast('Data gagal disimpan ke penyimpanan browser.', 'error');
+                    return;
+                }
                 renderDashboard();
                 showToast('Data berhasil dihapus.');
             }
